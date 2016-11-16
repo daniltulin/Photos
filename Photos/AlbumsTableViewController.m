@@ -6,13 +6,13 @@
 //  Copyright © 2016 Daniil Tulin. All rights reserved.
 //
 
-#import "ViewController.h"
+#import "AlbumsTableViewController.h"
 
-@interface ViewController ()
+@interface AlbumsTableViewController ()
 
 @end
 
-@implementation ViewController
+@implementation AlbumsTableViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
