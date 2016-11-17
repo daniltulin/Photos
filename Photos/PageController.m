@@ -29,8 +29,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-//    self.extendedLayoutIncludesOpaqueBars = YES;
-//    self.navigationController.navigationBar.translucent = YES;
+    self.edgesForExtendedLayout = UIRectEdgeNone;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
