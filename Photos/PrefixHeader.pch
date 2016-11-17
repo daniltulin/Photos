@@ -1,0 +1,27 @@
+//
+//  PrefixHeader.pch
+//  Photos
+//
+//  Created by Danil Tulin on 11/16/16.
+//  Copyright © 2016 Daniil Tulin. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import <Photos/Photos.h>
+
+static const CGSize THUMBNAIL_SIZE = {50, 50};
+static const float OFFSET = 10;
+
+typedef void (^ResultHandler)(UIImage*, NSDictionary*);
+typedef void (^ResultImageDataHandler)(NSData*, NSString*, UIImageOrientation, NSDictionary*);
+
+typedef PHFetchResult<PHAsset *> AssetFetchResult;
+
+#endif /* PrefixHeader_pch */

@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  ThumbnailCollectionView.h
 //  Photos
 //
 //  Created by Danil Tulin on 11/16/16.
@@ -8,8 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface AlbumsTableViewController : UITableViewController
+@interface ThumbnailView : UICollectionViewCell
 
+@property (nonatomic) UIImage *thumbnail;
 
 @end
-
