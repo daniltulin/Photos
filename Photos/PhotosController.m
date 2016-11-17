@@ -148,7 +148,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
                                                                        ascending:YES];
     options.sortDescriptors = @[dateSortDescriptor];
-
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    
     _fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
                                                  options:options];
     return _fetchResult;
