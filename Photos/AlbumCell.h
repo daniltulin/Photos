@@ -16,5 +16,6 @@ static NSString *ALBUM_CELL_ID = @"albumcellid";
 @interface AlbumCell : UITableViewCell
 
 @property (nonatomic) Album *album;
+@property (nonatomic) UIImage *thumbnail;
 
 @end

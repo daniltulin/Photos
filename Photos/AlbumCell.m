@@ -45,15 +45,13 @@
 - (void)setAlbum:(Album *)album {
     _album = album;
     
-    if (album != nil) {
-        self.textLabel.text = album.name;
-        self.detailTextLabel.text = [[NSNumber numberWithUnsignedInteger:album.count] stringValue];
-        self.albumPreview.image = album.thumbnail;
-    } else {
-        self.textLabel.text = nil;
-        self.detailTextLabel.text = nil;
-        self.albumPreview.image = nil;
-    }
+    self.textLabel.text = album.name;
+    self.detailTextLabel.text = [[NSNumber numberWithUnsignedInteger:album.count] stringValue];
+}
+
+- (void)setThumbnail:(UIImage *)thumbnail {
+    _thumbnail = thumbnail;
+    self.albumPreview.image = thumbnail;
 }
 
 #pragma mark - Album Preview
