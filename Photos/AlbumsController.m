@@ -130,7 +130,7 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
          resultHandler:(ResultHandler)resultHandler {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.fetchLimit = 1;
-    
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
                                                                        ascending:NO];
     options.sortDescriptors = @[dateSortDescriptor];
