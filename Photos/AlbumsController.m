@@ -52,8 +52,52 @@
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     AlbumCell *cell = [tableView dequeueReusableCellWithIdentifier:ALBUM_CELL_ID
                                                       forIndexPath:indexPath];
-    cell.assetCollection = self.fetchResult[indexPath.row];
+    cell.album = nil;
+    
+    NSUInteger index = indexPath.row;
+    PHAssetCollection *assetCollection = self.fetchResult[index];
+    
+    NSString *name = assetCollection.localizedTitle;
+    NSUInteger count = [self fetchAssetCount:assetCollection];
+    
+    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
+        Album *album = [Album albumWithName:name
+                                      count:count
+                                  thumbnail:result];
+        cell.album = album;
+    };
+    [self fetchLastImage:assetCollection
+           resultHandler:resultHandler];
     return cell;
+}
+
+- (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
+                                                                  options:options];
+    return fetchResult.count;
+}
+
+- (void)fetchLastImage:(PHAssetCollection *)assetCollection
+         resultHandler:(ResultHandler)resultHandler {
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    options.fetchLimit = 1;
+    
+    NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
+                                                                       ascending:YES];
+    options.sortDescriptors = @[dateSortDescriptor];
+    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
+                                                                  options:options];
+    PHAsset *lastAsset = [fetchResult firstObject];
+    PHImageManager *manager = [PHImageManager defaultManager];
+    
+    [manager requestImageForAsset:lastAsset
+                       targetSize:THUMBNAIL_SIZE
+                      contentMode:PHImageContentModeDefault
+                          options:nil
+                    resultHandler:resultHandler];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
