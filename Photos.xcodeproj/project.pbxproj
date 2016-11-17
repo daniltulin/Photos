@@ -20,6 +20,7 @@
 		A1E4A0601DDCCFFC00E6FBC0 /* ThumbnailView.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A05F1DDCCFFC00E6FBC0 /* ThumbnailView.m */; };
 		A1E4A0661DDCF51A00E6FBC0 /* PreviewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A0651DDCF51A00E6FBC0 /* PreviewController.m */; };
 		A1E4A06E1DDD7C4400E6FBC0 /* PageController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A06D1DDD7C4400E6FBC0 /* PageController.m */; };
+		A1E4A0721DDDA9F700E6FBC0 /* Album.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A0711DDDA9F700E6FBC0 /* Album.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,8 @@
 		A1E4A0651DDCF51A00E6FBC0 /* PreviewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PreviewController.m; sourceTree = "<group>"; };
 		A1E4A06C1DDD7C4400E6FBC0 /* PageController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PageController.h; sourceTree = "<group>"; };
 		A1E4A06D1DDD7C4400E6FBC0 /* PageController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PageController.m; sourceTree = "<group>"; };
+		A1E4A0701DDDA9F700E6FBC0 /* Album.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Album.h; sourceTree = "<group>"; };
+		A1E4A0711DDDA9F700E6FBC0 /* Album.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Album.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +123,7 @@
 		A118331C1DDC970800A7BE21 /* Photos */ = {
 			isa = PBXGroup;
 			children = (
+				A1E4A0741DDDAA0300E6FBC0 /* Model */,
 				A1E4A0621DDCE8EA00E6FBC0 /* View */,
 				A1E4A0631DDCE8F400E6FBC0 /* Controller */,
 				A11833291DDC970800A7BE21 /* Assets.xcassets */,
@@ -248,6 +252,23 @@
 				A1E4A06D1DDD7C4400E6FBC0 /* PageController.m */,
 			);
 			name = PageController;
+			sourceTree = "<group>";
+		};
+		A1E4A0731DDDA9FF00E6FBC0 /* Album */ = {
+			isa = PBXGroup;
+			children = (
+				A1E4A0701DDDA9F700E6FBC0 /* Album.h */,
+				A1E4A0711DDDA9F700E6FBC0 /* Album.m */,
+			);
+			name = Album;
+			sourceTree = "<group>";
+		};
+		A1E4A0741DDDAA0300E6FBC0 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				A1E4A0731DDDA9FF00E6FBC0 /* Album */,
+			);
+			name = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -384,6 +405,7 @@
 				A1E4A0601DDCCFFC00E6FBC0 /* ThumbnailView.m in Sources */,
 				A11833251DDC970800A7BE21 /* AlbumsController.m in Sources */,
 				A11833221DDC970800A7BE21 /* AppDelegate.m in Sources */,
+				A1E4A0721DDDA9F700E6FBC0 /* Album.m in Sources */,
 				A1E4A0661DDCF51A00E6FBC0 /* PreviewController.m in Sources */,
 				A1E4A05C1DDCCAB900E6FBC0 /* PhotosController.m in Sources */,
 				A118331F1DDC970800A7BE21 /* main.m in Sources */,
