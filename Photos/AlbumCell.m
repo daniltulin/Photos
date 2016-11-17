@@ -38,44 +38,18 @@
                                            CGRectGetMidY(bounds));
 }
 
-- (void)setAssetCollection:(PHAssetCollection *)assetCollection {
-    _assetCollection = assetCollection;
+- (void)setAlbum:(Album *)album {
+    _album = album;
     
-    self.textLabel.text = assetCollection.localizedTitle;
-    self.detailTextLabel.text = [self fetchAssetsCountString];
-    [self fetchLastAlbumImage];
-}
-
-- (NSString *)fetchAssetsCountString {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
-    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
-                                                                  options:options];
-    return [[NSNumber numberWithLong:fetchResult.count] stringValue];
-}
-
-- (void)fetchLastAlbumImage {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.fetchLimit = 1;
-    
-    NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
-                                                                       ascending:YES];
-    options.sortDescriptors = @[dateSortDescriptor];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
-                                                                          options:options];
-    PHAsset *lastAsset = [fetchResult firstObject];
-    PHImageManager *manager = [PHImageManager defaultManager];
-    
-    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        self.albumPreview.image = result;
-    };
-    
-    [manager requestImageForAsset:lastAsset
-                       targetSize:THUMBNAIL_SIZE
-                      contentMode:PHImageContentModeDefault
-                          options:nil
-                    resultHandler:resultHandler];
+    if (album != nil) {
+        self.textLabel.text = album.name;
+        self.detailTextLabel.text = [[NSNumber numberWithUnsignedInteger:album.count] stringValue];
+        self.albumPreview.image = album.thumbnail;
+    } else {
+        self.textLabel.text = nil;
+        self.detailTextLabel.text = nil;
+        self.albumPreview.image = nil;
+    }
 }
 
 #pragma mark - Album Preview
