@@ -12,10 +12,10 @@
 
 + (instancetype)albumWithName:(NSString *)name
                         count:(NSUInteger)count
-                    thumbnail:(UIImage *)thumbnail;
+                   identifier:(NSString *)localIdentifier;
 
+@property (nonatomic, copy, readonly) NSString *localIdentifier;
 @property (nonatomic, readonly) NSString *name;
 @property (nonatomic, readonly) NSUInteger count;
-@property (nonatomic, readonly) UIImage *thumbnail;
 
 @end
