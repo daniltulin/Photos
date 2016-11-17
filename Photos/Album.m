@@ -18,7 +18,9 @@
 
 @implementation Album
 
-+ (instancetype)albumWithName:(NSString *)name count:(NSUInteger)count thumbnail:(UIImage *)thumbnail {
++ (instancetype)albumWithName:(NSString *)name
+                        count:(NSUInteger)count
+                    thumbnail:(UIImage *)thumbnail {
     Album *album = [[Album alloc] init];
     album.name = name;
     album.count = count;
