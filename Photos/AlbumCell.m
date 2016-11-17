@@ -62,6 +62,8 @@
     if (_albumPreview)
         return _albumPreview;
     _albumPreview = [[UIImageView alloc] init];
+    _albumPreview.contentMode = UIViewContentModeScaleAspectFill;
+    _albumPreview.clipsToBounds = YES;
     return _albumPreview;
 }
 
