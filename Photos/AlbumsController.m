@@ -71,6 +71,35 @@
     return cell;
 }
 
+- (CGFloat)tableView:(UITableView *)tableView
+heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return THUMBNAIL_SIZE.height + 2*OFFSET;
+}
+
+- (void)tableView:(UITableView *)tableView
+didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    PHAssetCollection *assetCollection = self.fetchResult[indexPath.row];
+    PhotosController *controller = [PhotosController
+                                    photosControllerWithAssetCollection:assetCollection];
+    controller.title = assetCollection.localizedTitle;
+    [self.navigationController pushViewController:controller
+                                         animated:YES];
+}
+
+#pragma mark - Fetch Result
+
+- (PHFetchResult<PHAssetCollection *> *)fetchResult {
+    if (_fetchResult)
+        return _fetchResult;
+
+    PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
+    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAlbumRegular;
+    _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
+                                                            subtype:subtype
+                                                            options:nil];
+    return _fetchResult;
+}
+
 - (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
@@ -95,41 +124,14 @@
     
     CGFloat imageWidth = 3 * THUMBNAIL_SIZE.width;
     CGSize imageSize = CGSizeMake(imageWidth, imageWidth);
-
+    
+    PHImageContentMode contentMode = PHImageContentModeAspectFit;
+    
     [manager requestImageForAsset:lastAsset
                        targetSize:imageSize
-                      contentMode:PHImageContentModeDefault
+                      contentMode:contentMode
                           options:nil
                     resultHandler:resultHandler];
 }
-
-- (CGFloat)tableView:(UITableView *)tableView
-heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return THUMBNAIL_SIZE.height + 2*OFFSET;
-}
-
-- (void)tableView:(UITableView *)tableView
-didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    PHAssetCollection *assetCollection = self.fetchResult[indexPath.row];
-    PhotosController *controller = [PhotosController
-                                    photosControllerWithAssetCollection:assetCollection];
-    [self.navigationController pushViewController:controller
-                                         animated:YES];
-}
-
-#pragma mark - Fetch Result
-
-- (PHFetchResult<PHAssetCollection *> *)fetchResult {
-    if (_fetchResult)
-        return _fetchResult;
-
-    PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
-    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAlbumRegular;
-    _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
-                                                            subtype:subtype
-                                                            options:nil];
-    return _fetchResult;
-}
-
 
 @end
