@@ -32,11 +32,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor blackColor];
-    
     [self.view addSubview:self.imageView];
-    
-    self.extendedLayoutIncludesOpaqueBars = YES;
-    self.navigationController.navigationBar.translucent = YES;
     
     [self.view addSubview:self.indicatorView];
     [self.indicatorView startAnimating];
@@ -60,6 +56,7 @@
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
+    
     self.imageView.frame = self.view.bounds;
     if (_indicatorView)
         self.indicatorView.center = CGPointMake(CGRectGetMidX(self.view.bounds),
