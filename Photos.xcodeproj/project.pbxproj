@@ -223,8 +223,8 @@
 		A1E4A0631DDCE8F400E6FBC0 /* Controller */ = {
 			isa = PBXGroup;
 			children = (
-				A1E4A06F1DDD7E4100E6FBC0 /* PageController */,
 				A1E4A0671DDCF52500E6FBC0 /* PreviewPhotoController */,
+				A1E4A06F1DDD7E4100E6FBC0 /* PageController */,
 				A1E4A05D1DDCCAC000E6FBC0 /* PhotosController */,
 				A1E4A0581DDCCA6C00E6FBC0 /* AlbumsController */,
 				A1E4A0571DDCCA4800E6FBC0 /* NoAccessController */,
