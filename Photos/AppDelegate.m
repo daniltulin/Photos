@@ -8,7 +8,10 @@
 
 #import "AppDelegate.h"
 
-#import "ViewController.h"
+#import "AlbumsController.h"
+#import "NoAccessController.h"
+
+#import <Photos/Photos.h>
 
 @interface AppDelegate ()
 
@@ -22,15 +25,23 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     CGRect bounds = [UIScreen mainScreen].bounds;
     self.window = [[UIWindow alloc] initWithFrame:bounds];
-    
-    ViewController *viewController = [[ViewController alloc] init];
-    self.window.rootViewController = viewController;
     self.window.backgroundColor = [UIColor whiteColor];
-    [self.window makeKeyAndVisible];
+    
+    [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+        if (status == PHAuthorizationStatusAuthorized)
+            [self showController:[[AlbumsController alloc] init]];
+        else {
+            [self showController:[[NoAccessController alloc] init]];
+        }
+    }];
     
     return YES;
 }
 
+- (void)showController:(UIViewController *)controller {
+    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:controller];
+    [self.window makeKeyAndVisible];
+}
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
