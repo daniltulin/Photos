@@ -86,15 +86,18 @@
     options.fetchLimit = 1;
     
     NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
-                                                                       ascending:YES];
+                                                                       ascending:NO];
     options.sortDescriptors = @[dateSortDescriptor];
     AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
                                                                   options:options];
     PHAsset *lastAsset = [fetchResult firstObject];
     PHImageManager *manager = [PHImageManager defaultManager];
     
+    CGFloat imageWidth = 3 * THUMBNAIL_SIZE.width;
+    CGSize imageSize = CGSizeMake(imageWidth, imageWidth);
+
     [manager requestImageForAsset:lastAsset
-                       targetSize:THUMBNAIL_SIZE
+                       targetSize:imageSize
                       contentMode:PHImageContentModeDefault
                           options:nil
                     resultHandler:resultHandler];
@@ -108,7 +111,8 @@ heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 - (void)tableView:(UITableView *)tableView
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     PHAssetCollection *assetCollection = self.fetchResult[indexPath.row];
-    PhotosController *controller = [PhotosController photosControllerWithAssetCollection:assetCollection];
+    PhotosController *controller = [PhotosController
+                                    photosControllerWithAssetCollection:assetCollection];
     [self.navigationController pushViewController:controller
                                          animated:YES];
 }
@@ -118,8 +122,11 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 - (PHFetchResult<PHAssetCollection *> *)fetchResult {
     if (_fetchResult)
         return _fetchResult;
-    _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum
-                                                            subtype:PHAssetCollectionSubtypeAlbumRegular
+
+    PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
+    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAlbumRegular;
+    _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
+                                                            subtype:subtype
                                                             options:nil];
     return _fetchResult;
 }
