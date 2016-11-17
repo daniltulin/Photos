@@ -25,9 +25,13 @@
     return self;
 }
 
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+    [super willMoveToSuperview:newSuperview];
+    [self.contentView addSubview:self.albumPreview];
+}
+
 - (void)layoutSubviews {
     [super layoutSubviews];
-    [self.contentView addSubview:self.albumPreview];
     
     CGRect frame = {CGPointZero, THUMBNAIL_SIZE};
     self.albumPreview.frame = frame;
