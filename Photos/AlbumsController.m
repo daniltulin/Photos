@@ -13,7 +13,7 @@
 #import "AlbumCell.h"
 #import "PhotosController.h"
 
-@interface AlbumsController ()
+@interface AlbumsController () <PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
 
@@ -38,9 +38,14 @@
 }
 
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] unregisterChangeObserver:self];
 }
 
 #pragma mark - Table View Delegate
@@ -166,6 +171,12 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                                                             subtype:subtype
                                                             options:nil];
     return _fetchResult;
+}
+
+#pragma mark - <PHPhotoLibraryChangeObserver>
+
+- (void)photoLibraryDidChange:(PHChange *)changeInstance {
+
 }
 
 #pragma mark - operations
