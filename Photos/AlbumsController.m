@@ -124,7 +124,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 - (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
                                                                   options:options];
@@ -166,10 +165,12 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
         return _fetchResult;
     
     PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
-    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAlbumRegular;
+    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAny;
+    
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
     _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
                                                             subtype:subtype
-                                                            options:nil];
+                                                            options:options];
     return _fetchResult;
 }
 
