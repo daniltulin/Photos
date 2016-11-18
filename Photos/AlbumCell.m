@@ -42,13 +42,6 @@
                                            CGRectGetMidY(bounds));
 }
 
-- (void)setAlbum:(Album *)album {
-    _album = album;
-    
-    self.textLabel.text = album.name;
-    self.detailTextLabel.text = [[NSNumber numberWithUnsignedInteger:album.count] stringValue];
-}
-
 - (void)setThumbnail:(UIImage *)thumbnail {
     _thumbnail = thumbnail;
     self.albumPreview.image = thumbnail;

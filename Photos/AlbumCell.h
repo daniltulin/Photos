@@ -9,13 +9,10 @@
 #import <UIKit/UIKit.h>
 #import <Photos/Photos.h>
 
-#import "Album.h"
-
 static NSString *ALBUM_CELL_ID = @"albumcellid";
 
 @interface AlbumCell : UITableViewCell
 
-@property (nonatomic) Album *album;
 @property (nonatomic) UIImage *thumbnail;
 
 @end
