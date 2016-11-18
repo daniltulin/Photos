@@ -13,7 +13,7 @@
 #import "AlbumCell.h"
 #import "PhotosController.h"
 
-@interface AlbumsController ()
+@interface AlbumsController () <PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
 
@@ -38,9 +38,14 @@
 }
 
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] unregisterChangeObserver:self];
 }
 
 #pragma mark - Table View Delegate
@@ -119,7 +124,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 - (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
                                                                   options:options];
@@ -161,11 +165,68 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
         return _fetchResult;
     
     PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
-    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAlbumRegular;
+    PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAny;
+    
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
     _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
                                                             subtype:subtype
-                                                            options:nil];
+                                                            options:options];
     return _fetchResult;
+}
+
+#pragma mark - <PHPhotoLibraryChangeObserver>
+
+- (void)photoLibraryDidChange:(PHChange *)changeInstance {
+    PHFetchResultChangeDetails *changeDetails =
+    	[changeInstance changeDetailsForFetchResult:self.fetchResult];
+    enqueueInMainQueue(^{
+        if (changeDetails != nil)
+            [self updateContentWithChangeDeatails:changeDetails];
+        else
+            [self.tableView reloadData];
+    });
+}
+
+- (void)updateContentWithChangeDeatails:(PHFetchResultChangeDetails *)changeDetails {
+    _fetchResult = changeDetails.fetchResultAfterChanges;
+    if (changeDetails.hasIncrementalChanges) {
+        [self.tableView beginUpdates];
+        NSIndexSet *removed = changeDetails.removedIndexes;
+        if (removed.count) {
+            [self.tableView deleteRowsAtIndexPaths:[self indexPathsFromIndexSet:removed]
+                                  withRowAnimation:UITableViewRowAnimationFade];
+        }
+        NSIndexSet *inserted = changeDetails.insertedIndexes;
+        if (inserted.count) {
+            [self.tableView insertRowsAtIndexPaths:[self indexPathsFromIndexSet:inserted]
+                                  withRowAnimation:UITableViewRowAnimationFade];
+        }
+        NSIndexSet *changed = changeDetails.changedIndexes;
+        if (changed.count) {
+            [self.tableView reloadRowsAtIndexPaths:[self indexPathsFromIndexSet:changed]
+                                  withRowAnimation:UITableViewRowAnimationFade];
+        }
+        if (changeDetails.hasMoves) {
+            [changeDetails enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
+                NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
+                NSIndexPath *toIndexPath = [NSIndexPath indexPathForItem:toIndex inSection:0];
+                [self.tableView moveRowAtIndexPath:fromIndexPath
+                                       toIndexPath:toIndexPath];
+            }];
+        }
+        [self.tableView endUpdates];
+    } else {
+        [self.tableView reloadData];
+    }
+}
+
+- (NSArray *)indexPathsFromIndexSet:(NSIndexSet *)set {
+    NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+    [set enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL * _Nonnull stop) {
+        [indexPaths addObject:[NSIndexPath indexPathForRow:idx
+                                                 inSection:0]];
+    }];
+    return indexPaths;
 }
 
 #pragma mark - operations
