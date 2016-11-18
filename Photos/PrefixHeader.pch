@@ -24,4 +24,11 @@ typedef void (^ResultImageDataHandler)(NSData*, NSString*, UIImageOrientation, N
 
 typedef PHFetchResult<PHAsset *> AssetFetchResult;
 
+#define TICK   NSDate *startTime = [NSDate date]
+#define TOCK   NSLog(@"Time: %f", -[startTime timeIntervalSinceNow])
+
+static void enqueueInMainQueue(dispatch_block_t block) {
+    dispatch_async(dispatch_get_main_queue(), block);
+}
+
 #endif /* PrefixHeader_pch */

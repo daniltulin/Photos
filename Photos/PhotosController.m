@@ -21,6 +21,9 @@
 
 @property (nonatomic) UIPageViewController *pageViewController;
 
+@property (nonatomic) PHCachingImageManager *imageManager;
+@property (nonatomic) PHImageRequestOptions *requestOptions;
+
 @end
 
 @implementation PhotosController
@@ -58,12 +61,24 @@ static NSString * const reuseIdentifier = @"Cell";
             forCellWithReuseIdentifier:reuseIdentifier];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.imageManager startCachingImagesForAssets:(NSArray *)self.fetchResult
+                                        targetSize:[self thumbnailPhysicalSize]
+                                       contentMode:PHImageContentModeDefault
+                                           options:self.requestOptions];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self.imageManager stopCachingImagesForAllAssets];
+}
+
 #pragma mark <UICollectionViewDelegate>
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
     return 1;
 }
-
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView
      numberOfItemsInSection:(NSInteger)section {
@@ -79,13 +94,12 @@ static NSString * const reuseIdentifier = @"Cell";
     ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
             cell.thumbnail = result;
     };
-    CGSize thumbnailSize = [self thumbnailSize];
-    float imageWidth = 3 * thumbnailSize.width;
-    [[PHImageManager defaultManager] requestImageForAsset:asset
-                                               targetSize:CGSizeMake(imageWidth, imageWidth)
-                                              contentMode:PHImageContentModeDefault
-                                                  options:nil
-                                            resultHandler:resultHandler];
+    CGSize thumbnailPhysicalSize = [self thumbnailPhysicalSize];
+    [self.imageManager requestImageForAsset:asset
+                                 targetSize:thumbnailPhysicalSize
+                                contentMode:PHImageContentModeDefault
+                                    options:self.requestOptions
+                              resultHandler:resultHandler];
     return cell;
 }
 
@@ -100,6 +114,12 @@ static NSString * const reuseIdentifier = @"Cell";
 - (CGSize)thumbnailSize {
     CGFloat width = CGRectGetWidth(self.view.bounds) / 4;
     return CGSizeMake(width, width);
+}
+
+- (CGSize)thumbnailPhysicalSize {
+    CGSize thumbnailSize = [self thumbnailSize];
+    float imageWidth = 3 * thumbnailSize.width;
+    return CGSizeMake(imageWidth, imageWidth);
 }
 
 - (void)collectionView:(UICollectionView *)collectionView
@@ -148,10 +168,30 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
                                                                        ascending:YES];
     options.sortDescriptors = @[dateSortDescriptor];
-
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    
     _fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
                                                  options:options];
     return _fetchResult;
+}
+
+#pragma mark - ImageManager
+
+- (PHCachingImageManager *)imageManager {
+    if (_imageManager)
+        return _imageManager;
+    _imageManager = [[PHCachingImageManager alloc] init];
+    return _imageManager;
+}
+
+#pragma mark - RequestOptions
+
+- (PHImageRequestOptions *)requestOptions {
+    if (_requestOptions)
+        return _requestOptions;
+    _requestOptions = [[PHImageRequestOptions alloc] init];
+    _requestOptions.networkAccessAllowed = YES;
+    return _requestOptions;
 }
 
 @end

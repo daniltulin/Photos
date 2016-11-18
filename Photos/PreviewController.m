@@ -16,6 +16,7 @@
 @property (nonatomic, readwrite) NSUInteger index;
 
 @property (nonatomic) UIActivityIndicatorView *indicatorView;
+@property (nonatomic) PHImageRequestID requestID;
 
 @end
 
@@ -32,35 +33,63 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor blackColor];
-    [self.view addSubview:self.imageView];
     
+    [self.view addSubview:self.imageView];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    
+    
+    self.imageView.frame = self.view.bounds;
+    if (_indicatorView)
+        self.indicatorView.center = CGPointMake(CGRectGetMidX(self.view.bounds),
+                                                CGRectGetMidY(self.view.bounds));
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    if (self.imageView.image == nil) {
+        [self obtainImage];
+    }
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    if (self.requestID)
+        [[PHImageManager defaultManager] cancelImageRequest:self.requestID];
+}
+
+- (void)obtainImage {
     [self.view addSubview:self.indicatorView];
     [self.indicatorView startAnimating];
     
     PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
     options.networkAccessAllowed = YES;
-    ResultImageDataHandler resultHandler = ^void(NSData *imageData,
-                                       			 NSString *dataUTI,
-                                       			 UIImageOrientation orientation,
-                                       			 NSDictionary *info) {
+    
+    typedef void (^ImageSettingBlock)(NSData *imageData);
+    ImageSettingBlock settingBlock = ^void(NSData *imageData) {
         [self.indicatorView stopAnimating];
         [self.indicatorView removeFromSuperview];
         _indicatorView = nil;
         
         self.imageView.image = [UIImage imageWithData:imageData];
     };
-    [[PHImageManager defaultManager] requestImageDataForAsset:self.asset
-                                                      options:options
-                                                resultHandler:resultHandler];
-}
-
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
     
-    self.imageView.frame = self.view.bounds;
-    if (_indicatorView)
-        self.indicatorView.center = CGPointMake(CGRectGetMidX(self.view.bounds),
-                                                CGRectGetMidY(self.view.bounds));
+    ResultImageDataHandler resultHandler = ^void(NSData *imageData,
+                                                 NSString *dataUTI,
+                                                 UIImageOrientation orientation,
+                                                 NSDictionary *info) {
+        enqueueInMainQueue(^{
+            settingBlock(imageData);
+        });
+    };
+    
+    self.requestID = [[PHImageManager defaultManager] requestImageDataForAsset:self.asset
+                                                                       options:options
+                                                                 resultHandler:resultHandler];
 }
 
 #pragma mark - Image View

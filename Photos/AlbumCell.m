@@ -25,9 +25,13 @@
     return self;
 }
 
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+    [super willMoveToSuperview:newSuperview];
+    [self.contentView addSubview:self.albumPreview];
+}
+
 - (void)layoutSubviews {
     [super layoutSubviews];
-    [self.contentView addSubview:self.albumPreview];
     
     CGRect frame = {CGPointZero, THUMBNAIL_SIZE};
     self.albumPreview.frame = frame;
@@ -38,44 +42,16 @@
                                            CGRectGetMidY(bounds));
 }
 
-- (void)setAssetCollection:(PHAssetCollection *)assetCollection {
-    _assetCollection = assetCollection;
+- (void)setAlbum:(Album *)album {
+    _album = album;
     
-    self.textLabel.text = assetCollection.localizedTitle;
-    self.detailTextLabel.text = [self fetchAssetsCountString];
-    [self fetchLastAlbumImage];
+    self.textLabel.text = album.name;
+    self.detailTextLabel.text = [[NSNumber numberWithUnsignedInteger:album.count] stringValue];
 }
 
-- (NSString *)fetchAssetsCountString {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.includeAssetSourceTypes = PHAssetSourceTypeUserLibrary;
-    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
-                                                                  options:options];
-    return [[NSNumber numberWithLong:fetchResult.count] stringValue];
-}
-
-- (void)fetchLastAlbumImage {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.fetchLimit = 1;
-    
-    NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
-                                                                       ascending:YES];
-    options.sortDescriptors = @[dateSortDescriptor];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
-                                                                          options:options];
-    PHAsset *lastAsset = [fetchResult firstObject];
-    PHImageManager *manager = [PHImageManager defaultManager];
-    
-    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        self.albumPreview.image = result;
-    };
-    
-    [manager requestImageForAsset:lastAsset
-                       targetSize:THUMBNAIL_SIZE
-                      contentMode:PHImageContentModeDefault
-                          options:nil
-                    resultHandler:resultHandler];
+- (void)setThumbnail:(UIImage *)thumbnail {
+    _thumbnail = thumbnail;
+    self.albumPreview.image = thumbnail;
 }
 
 #pragma mark - Album Preview
@@ -84,6 +60,8 @@
     if (_albumPreview)
         return _albumPreview;
     _albumPreview = [[UIImageView alloc] init];
+    _albumPreview.contentMode = UIViewContentModeScaleAspectFill;
+    _albumPreview.clipsToBounds = YES;
     return _albumPreview;
 }
 
