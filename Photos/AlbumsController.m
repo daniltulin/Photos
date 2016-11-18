@@ -59,36 +59,36 @@
          cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     AlbumCell *cell = [tableView dequeueReusableCellWithIdentifier:ALBUM_CELL_ID
                                                       forIndexPath:indexPath];
-    
-    NSUInteger index = indexPath.row;
-    PHAssetCollection *assetCollection = self.fetchResult[index];
+
+    NSInteger index = indexPath.row;
+    PHAssetCollection *collection = self.fetchResult[index];
+
+    cell.textLabel.text = collection.localizedTitle;
+    cell.detailTextLabel.text = nil;
     cell.thumbnail = nil;
-    
-    Album *previosAlbum = cell.album;
-    NSString *previousKey = (previosAlbum != nil)? previosAlbum.localIdentifier : nil;
-    NSInvocationOperation *operation = self.operations[previousKey];
-    
-    NSString *name = assetCollection.localizedTitle;
-    NSUInteger count = [self fetchAssetCount:assetCollection];
-    NSString *localIdentifier = assetCollection.localIdentifier;
-    
-    Album *album = [Album albumWithName:name
-                                  count:count
-                             identifier:localIdentifier];
-    cell.album = album;
-    
-    if (operation != nil && operation.isExecuting)
-        [operation cancel];
-        
-    NSDictionary *args = @{@"cell": cell, @"index": [NSNumber numberWithUnsignedInteger:index]};
-    operation = [[NSInvocationOperation alloc] initWithTarget:self
-                                                     selector:@selector(obtainCellInformation:)
-                                                       object:args];
-    
-    NSString *newKey = assetCollection.localIdentifier;
-    self.operations[newKey] = operation;
+
+    NSNumber *identifier = [NSNumber numberWithUnsignedInteger:index];
+    NSDictionary *args = @{@"cell": cell,
+                           @"identifier": identifier};
+
+    typedef NSInvocationOperation Operation;
+    Operation *operation = [[Operation alloc] initWithTarget:self
+                                                    selector:@selector(obtainCellInformation:)
+                                                      object:args];
     [self.operationQueue addOperation:operation];
+    self.operations[identifier] = operation;
     return cell;
+}
+
+- (void)tableView:(UITableView *)tableView
+didEndDisplayingCell:(AlbumCell *)cell
+forRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSNumber *identifier = [NSNumber numberWithUnsignedInteger:indexPath.row];
+    NSOperation *operation = self.operations[identifier];
+    if (operation != nil && operation.isFinished == NO) {
+        [operation cancel];
+        [self.operations removeObjectForKey:identifier];
+    }
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -108,26 +108,37 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - Fetching
 
-- (void)obtainCellInformation:(NSDictionary *)args {
-    AlbumCell *cell = args[@"cell"];
-    NSUInteger index = [args[@"index"] unsignedIntegerValue];
-    
-    PHAssetCollection *assetCollection = self.fetchResult[index];
-    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        [cell performSelectorOnMainThread:@selector(setThumbnail:)
-                               withObject:result
-                            waitUntilDone:NO];
-    };
-    [self fetchLastImage:assetCollection
-           resultHandler:resultHandler];
-}
-
 - (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
                                                                   options:options];
     return fetchResult.count;
+}
+
+- (void)obtainCellInformation:(NSDictionary *)args {
+    AlbumCell *cell = args[@"cell"];
+    NSNumber *identifier = args[@"identifier"];
+    NSInteger index = [identifier integerValue];
+
+    PHAssetCollection *assetCollection = self.fetchResult[index];
+    NSInteger count = [self fetchAssetCount:assetCollection];
+
+    enqueueInMainQueue(^{
+        cell.detailTextLabel.text = [[NSNumber numberWithLong:count] stringValue];
+    });
+
+    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
+        enqueueInMainQueue(^{
+            if (self.operations[identifier] == nil)
+                return;
+
+            [self.operations removeObjectForKey:identifier];
+            cell.thumbnail = result;
+        });
+    };
+    [self fetchLastImage:assetCollection
+           resultHandler:resultHandler];
 }
 
 - (void)fetchLastImage:(PHAssetCollection *)assetCollection
@@ -142,10 +153,10 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                                                                   options:options];
     PHAsset *lastAsset = [fetchResult firstObject];
     PHImageManager *manager = [PHImageManager defaultManager];
-    
+
     CGFloat imageWidth = 3 * THUMBNAIL_SIZE.width;
     CGSize imageSize = CGSizeMake(imageWidth, imageWidth);
-    
+
     PHImageContentMode contentMode = PHImageContentModeAspectFit;
     PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
     requestOptions.networkAccessAllowed = YES;
@@ -163,10 +174,10 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 - (PHFetchResult<PHAssetCollection *> *)fetchResult {
     if (_fetchResult)
         return _fetchResult;
-    
+
     PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
     PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAny;
-    
+
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
                                                             subtype:subtype
@@ -197,7 +208,7 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 - (void)updateContentWithIncrementalChanges:(PHFetchResultChangeDetails *)changeDetails {
     [self.tableView beginUpdates];
-    
+
     NSIndexSet *removed = changeDetails.removedIndexes;
     if (removed.count)
         [self.tableView deleteRowsAtIndexPaths:[self indexPathsFromIndexSet:removed]
