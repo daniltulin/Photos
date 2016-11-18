@@ -213,7 +213,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
         [self.tableView reloadRowsAtIndexPaths:[self indexPathsFromIndexSet:changed]
                               withRowAnimation:UITableViewRowAnimationFade];
 
-
     if (changeDetails.hasMoves)
         [changeDetails enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
             NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
