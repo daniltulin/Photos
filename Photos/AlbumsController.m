@@ -181,43 +181,48 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     	[changeInstance changeDetailsForFetchResult:self.fetchResult];
     enqueueInMainQueue(^{
         if (changeDetails != nil)
-            [self updateContentWithChangeDeatails:changeDetails];
+            [self updateContentWithChangeDetails:changeDetails];
         else
             [self.tableView reloadData];
     });
 }
 
-- (void)updateContentWithChangeDeatails:(PHFetchResultChangeDetails *)changeDetails {
+- (void)updateContentWithChangeDetails:(PHFetchResultChangeDetails *)changeDetails {
     _fetchResult = changeDetails.fetchResultAfterChanges;
-    if (changeDetails.hasIncrementalChanges) {
-        [self.tableView beginUpdates];
-        NSIndexSet *removed = changeDetails.removedIndexes;
-        if (removed.count) {
-            [self.tableView deleteRowsAtIndexPaths:[self indexPathsFromIndexSet:removed]
-                                  withRowAnimation:UITableViewRowAnimationFade];
-        }
-        NSIndexSet *inserted = changeDetails.insertedIndexes;
-        if (inserted.count) {
-            [self.tableView insertRowsAtIndexPaths:[self indexPathsFromIndexSet:inserted]
-                                  withRowAnimation:UITableViewRowAnimationFade];
-        }
-        NSIndexSet *changed = changeDetails.changedIndexes;
-        if (changed.count) {
-            [self.tableView reloadRowsAtIndexPaths:[self indexPathsFromIndexSet:changed]
-                                  withRowAnimation:UITableViewRowAnimationFade];
-        }
-        if (changeDetails.hasMoves) {
-            [changeDetails enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
-                NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
-                NSIndexPath *toIndexPath = [NSIndexPath indexPathForItem:toIndex inSection:0];
-                [self.tableView moveRowAtIndexPath:fromIndexPath
-                                       toIndexPath:toIndexPath];
-            }];
-        }
-        [self.tableView endUpdates];
-    } else {
+    if (changeDetails.hasIncrementalChanges)
+        [self updateContentWithIncrementalChanges:changeDetails];
+    else
         [self.tableView reloadData];
-    }
+}
+
+- (void)updateContentWithIncrementalChanges:(PHFetchResultChangeDetails *)changeDetails {
+    [self.tableView beginUpdates];
+    
+    NSIndexSet *removed = changeDetails.removedIndexes;
+    if (removed.count)
+        [self.tableView deleteRowsAtIndexPaths:[self indexPathsFromIndexSet:removed]
+                              withRowAnimation:UITableViewRowAnimationFade];
+
+    NSIndexSet *inserted = changeDetails.insertedIndexes;
+    if (inserted.count)
+        [self.tableView insertRowsAtIndexPaths:[self indexPathsFromIndexSet:inserted]
+                              withRowAnimation:UITableViewRowAnimationFade];
+
+    NSIndexSet *changed = changeDetails.changedIndexes;
+    if (changed.count)
+        [self.tableView reloadRowsAtIndexPaths:[self indexPathsFromIndexSet:changed]
+                              withRowAnimation:UITableViewRowAnimationFade];
+
+
+    if (changeDetails.hasMoves)
+        [changeDetails enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
+            NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
+            NSIndexPath *toIndexPath = [NSIndexPath indexPathForItem:toIndex inSection:0];
+            [self.tableView moveRowAtIndexPath:fromIndexPath
+                                   toIndexPath:toIndexPath];
+        }];
+
+    [self.tableView endUpdates];
 }
 
 - (NSArray *)indexPathsFromIndexSet:(NSIndexSet *)set {
