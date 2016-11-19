@@ -16,9 +16,7 @@
 @interface AlbumsController () <PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
-
-@property (nonatomic) NSMutableDictionary *operations;
-@property (nonatomic) NSOperationQueue *operationQueue;
+@property (nonatomic) NSMutableDictionary *requests;
 
 @end
 
@@ -68,15 +66,10 @@
     cell.thumbnail = nil;
 
     NSNumber *identifier = [NSNumber numberWithUnsignedInteger:index];
-    NSDictionary *args = @{@"cell": cell,
-                           @"identifier": identifier};
-
-    typedef NSInvocationOperation Operation;
-    Operation *operation = [[Operation alloc] initWithTarget:self
-                                                    selector:@selector(obtainCellInformation:)
-                                                      object:args];
-    [self.operationQueue addOperation:operation];
-    self.operations[identifier] = operation;
+    executeInBackground(^{
+        [self obtainCellInformation:cell
+                         identifier:identifier];
+    });
     return cell;
 }
 
@@ -84,10 +77,10 @@
 didEndDisplayingCell:(AlbumCell *)cell
 forRowAtIndexPath:(NSIndexPath *)indexPath {
     NSNumber *identifier = [NSNumber numberWithUnsignedInteger:indexPath.row];
-    NSOperation *operation = self.operations[identifier];
-    if (operation != nil && operation.isFinished == NO) {
-        [operation cancel];
-        [self.operations removeObjectForKey:identifier];
+    NSNumber *requestID = self.requests[identifier];
+    if (requestID != nil) {
+        PHImageManager *manager = [PHImageManager defaultManager];
+        [manager cancelImageRequest:[requestID intValue]];
     }
 }
 
@@ -108,17 +101,8 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - Fetching
 
-- (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
-                                                                  options:options];
-    return fetchResult.count;
-}
-
-- (void)obtainCellInformation:(NSDictionary *)args {
-    AlbumCell *cell = args[@"cell"];
-    NSNumber *identifier = args[@"identifier"];
+- (void)obtainCellInformation:(AlbumCell *)cell
+                   identifier:(NSNumber *)identifier {
     NSInteger index = [identifier integerValue];
 
     PHAssetCollection *assetCollection = self.fetchResult[index];
@@ -127,22 +111,30 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     enqueueInMainQueue(^{
         cell.detailTextLabel.text = [[NSNumber numberWithLong:count] stringValue];
     });
-
     ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
         enqueueInMainQueue(^{
-            if (self.operations[identifier] == nil)
+            if (self.requests[identifier] == nil || info[PHImageCancelledKey])
                 return;
-
-            [self.operations removeObjectForKey:identifier];
+            [self.requests removeObjectForKey:identifier];
             cell.thumbnail = result;
         });
     };
-    [self fetchLastImage:assetCollection
+    [self fetchLastImage:identifier
            resultHandler:resultHandler];
 }
 
-- (void)fetchLastImage:(PHAssetCollection *)assetCollection
+- (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
+                                                                  options:options];
+    return fetchResult.count;
+}
+
+- (void)fetchLastImage:(NSNumber *)identifier
          resultHandler:(ResultHandler)resultHandler {
+    NSInteger index = [identifier integerValue];
+    PHAssetCollection *assetCollection = self.fetchResult[index];
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.fetchLimit = 1;
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
@@ -160,13 +152,15 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     PHImageContentMode contentMode = PHImageContentModeAspectFit;
     PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
     requestOptions.networkAccessAllowed = YES;
-    requestOptions.synchronous = YES;
     
-    [manager requestImageForAsset:lastAsset
-                       targetSize:imageSize
-                      contentMode:contentMode
-                          options:requestOptions
-                    resultHandler:resultHandler];
+    PHImageRequestID requestID =  [manager requestImageForAsset:lastAsset
+                                                     targetSize:imageSize
+                                                    contentMode:contentMode
+                                                        options:requestOptions
+                                                  resultHandler:resultHandler];
+    enqueueInMainQueue(^{
+        self.requests[identifier] = [NSNumber numberWithInt:requestID];
+    });
 }
 
 #pragma mark - FetchingResult
@@ -183,6 +177,15 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                                                             subtype:subtype
                                                             options:options];
     return _fetchResult;
+}
+
+#pragma mark - requests
+
+- (NSMutableDictionary *)requests {
+    if (_requests)
+        return _requests;
+    _requests = [[NSMutableDictionary alloc] init];
+    return _requests;
 }
 
 #pragma mark - <PHPhotoLibraryChangeObserver>
@@ -242,22 +245,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                                                  inSection:0]];
     }];
     return indexPaths;
-}
-
-#pragma mark - operations
-
-- (NSMutableDictionary *)operations {
-    if (_operations)
-        return _operations;
-    _operations = [[NSMutableDictionary alloc] init];
-    return _operations;
-}
-
-- (NSOperationQueue *)operationQueue {
-    if (_operationQueue)
-        return _operationQueue;
-    _operationQueue = [[NSOperationQueue alloc] init];
-    return _operationQueue;
 }
 
 @end

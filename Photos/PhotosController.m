@@ -24,6 +24,8 @@
 @property (nonatomic) PHCachingImageManager *imageManager;
 @property (nonatomic) PHImageRequestOptions *requestOptions;
 
+@property (nonatomic) NSMutableDictionary *requests;
+
 @end
 
 @implementation PhotosController
@@ -63,10 +65,16 @@ static NSString * const reuseIdentifier = @"Cell";
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self.imageManager startCachingImagesForAssets:(NSArray *)self.fetchResult
-                                        targetSize:[self thumbnailPhysicalSize]
-                                       contentMode:PHImageContentModeDefault
-                                           options:self.requestOptions];
+    executeInBackground(^{
+        NSMutableArray *assets = [[NSMutableArray alloc] init];
+        [self.fetchResult enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
+            [assets addObject:obj];
+        }];
+        [self.imageManager startCachingImagesForAssets:assets
+                                            targetSize:[self thumbnailPhysicalSize]
+                                           contentMode:PHImageContentModeDefault
+                                               options:self.requestOptions];
+    });
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -74,7 +82,7 @@ static NSString * const reuseIdentifier = @"Cell";
     [self.imageManager stopCachingImagesForAllAssets];
 }
 
-#pragma mark <UICollectionViewDelegate>
+#pragma mark -  <UICollectionViewDelegate>
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
     return 1;
@@ -91,16 +99,41 @@ static NSString * const reuseIdentifier = @"Cell";
                                                                     forIndexPath:indexPath];
     PHAsset *asset = self.fetchResult[indexPath.row];
     
+    NSInteger index = indexPath.row;
+    NSNumber *identifier = [NSNumber numberWithInteger:index];
+    
     ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-            cell.thumbnail = result;
+        enqueueInMainQueue(^{
+            NSNumber *request = self.requests[identifier];
+            if (request == nil || info[PHImageErrorKey])
+                return;
+            if (info[PHImageCancelledKey] == NO) {
+                cell.thumbnail = result;
+                if (info[PHImageResultIsDegradedKey]) return;
+            }
+            [self.requests removeObjectForKey:identifier];
+        });
     };
     CGSize thumbnailPhysicalSize = [self thumbnailPhysicalSize];
-    [self.imageManager requestImageForAsset:asset
-                                 targetSize:thumbnailPhysicalSize
-                                contentMode:PHImageContentModeDefault
-                                    options:self.requestOptions
-                              resultHandler:resultHandler];
+    PHImageRequestID requestID = [self.imageManager requestImageForAsset:asset
+                                                              targetSize:thumbnailPhysicalSize
+                                                             contentMode:PHImageContentModeDefault
+                                                                 options:self.requestOptions
+                                                           resultHandler:resultHandler];
+    self.requests[identifier] = [NSNumber numberWithInteger:requestID];
     return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView
+  didEndDisplayingCell:(UICollectionViewCell *)cell
+    forItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSInteger index = indexPath.row;
+    NSNumber *identifier = [NSNumber numberWithInteger:index];
+    NSNumber *request = self.requests[identifier];
+    if (request != nil) {
+        [self.imageManager cancelImageRequest:[request intValue]];
+        [self.requests removeObjectForKey:request];
+    }
 }
 
 #pragma mark - UICollectionViewDelegateFlowLayout
@@ -192,6 +225,15 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     _requestOptions = [[PHImageRequestOptions alloc] init];
     _requestOptions.networkAccessAllowed = YES;
     return _requestOptions;
+}
+
+#pragma mark - Requests
+
+- (NSMutableDictionary *)requests {
+    if (_requests)
+        return _requests;
+    _requests = [[NSMutableDictionary alloc] init];
+    return _requests;
 }
 
 @end

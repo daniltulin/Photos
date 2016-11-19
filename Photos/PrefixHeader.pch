@@ -31,4 +31,8 @@ static void enqueueInMainQueue(dispatch_block_t block) {
     dispatch_async(dispatch_get_main_queue(), block);
 }
 
+static void executeInBackground(dispatch_block_t block) {
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), block);
+}
+
 #endif /* PrefixHeader_pch */
