@@ -32,7 +32,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor blackColor];
+    self.view.backgroundColor = [UIColor whiteColor];
     
     [self.view addSubview:self.imageView];
 }
@@ -110,7 +110,7 @@
         return _indicatorView;
     
     _indicatorView = [[UIActivityIndicatorView alloc] init];
-    _indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
+    _indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
     return _indicatorView;
 }
 
