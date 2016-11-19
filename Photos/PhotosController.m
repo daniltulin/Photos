@@ -105,8 +105,12 @@ static NSString * const reuseIdentifier = @"Cell";
     ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
         enqueueInMainQueue(^{
             NSNumber *request = self.requests[identifier];
-            if (request == nil || info[PHImageErrorKey])
+            if (request == nil)
                 return;
+            if (info[PHImageErrorKey] != nil) {
+                NSLog(@"%@", info[PHImageErrorKey]);
+                return;
+            }
             if (info[PHImageCancelledKey] == NO) {
                 cell.thumbnail = result;
                 if (info[PHImageResultIsDegradedKey]) return;
