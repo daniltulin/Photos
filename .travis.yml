@@ -1,0 +1,3 @@
+language: objective-c
+xcode_project: Photos.xcodeproj
+xcode_scheme: Photos, OCLint
