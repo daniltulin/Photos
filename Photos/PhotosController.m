@@ -103,7 +103,7 @@ static NSString * const reuseIdentifier = @"Cell";
     NSNumber *identifier = [NSNumber numberWithInteger:index];
     
     ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        enqueueInMainQueue(^{
+        executeInMain(^{
             NSNumber *request = self.requests[identifier];
             if (request == nil)
                 return;

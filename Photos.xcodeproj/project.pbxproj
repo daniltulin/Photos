@@ -27,6 +27,7 @@
 		A118332A1DDC970800A7BE21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A11833291DDC970800A7BE21 /* Assets.xcassets */; };
 		A11833521DDC9B6C00A7BE21 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11833511DDC9B6C00A7BE21 /* Photos.framework */; };
 		A11833551DDCA5FA00A7BE21 /* NoAccessController.m in Sources */ = {isa = PBXBuildFile; fileRef = A11833541DDCA5FA00A7BE21 /* NoAccessController.m */; };
+		A19FFF4D1DE08C9E00F85889 /* ImageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A19FFF4C1DE08C9E00F85889 /* ImageManager.m */; };
 		A1E4A0551DDCBA4700E6FBC0 /* AlbumCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A0541DDCBA4700E6FBC0 /* AlbumCell.m */; };
 		A1E4A05C1DDCCAB900E6FBC0 /* PhotosController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A05B1DDCCAB900E6FBC0 /* PhotosController.m */; };
 		A1E4A0601DDCCFFC00E6FBC0 /* ThumbnailView.m in Sources */ = {isa = PBXBuildFile; fileRef = A1E4A05F1DDCCFFC00E6FBC0 /* ThumbnailView.m */; };
@@ -46,6 +47,8 @@
 		A11833511DDC9B6C00A7BE21 /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 		A11833531DDCA5FA00A7BE21 /* NoAccessController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoAccessController.h; sourceTree = "<group>"; };
 		A11833541DDCA5FA00A7BE21 /* NoAccessController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NoAccessController.m; sourceTree = "<group>"; };
+		A19FFF4B1DE08C9E00F85889 /* ImageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageManager.h; sourceTree = "<group>"; };
+		A19FFF4C1DE08C9E00F85889 /* ImageManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageManager.m; sourceTree = "<group>"; };
 		A1E4A0531DDCBA4700E6FBC0 /* AlbumCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AlbumCell.h; sourceTree = "<group>"; };
 		A1E4A0541DDCBA4700E6FBC0 /* AlbumCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AlbumCell.m; sourceTree = "<group>"; };
 		A1E4A0561DDCC2C700E6FBC0 /* PrefixHeader.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefixHeader.pch; sourceTree = "<group>"; };
@@ -207,6 +210,8 @@
 		A1E4A0741DDDAA0300E6FBC0 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				A19FFF4B1DE08C9E00F85889 /* ImageManager.h */,
+				A19FFF4C1DE08C9E00F85889 /* ImageManager.m */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -309,6 +314,7 @@
 				A1E4A05C1DDCCAB900E6FBC0 /* PhotosController.m in Sources */,
 				A118331F1DDC970800A7BE21 /* main.m in Sources */,
 				A11833551DDCA5FA00A7BE21 /* NoAccessController.m in Sources */,
+				A19FFF4D1DE08C9E00F85889 /* ImageManager.m in Sources */,
 				A1E4A0551DDCBA4700E6FBC0 /* AlbumCell.m in Sources */,
 				A1E4A06E1DDD7C4400E6FBC0 /* PageController.m in Sources */,
 			);
