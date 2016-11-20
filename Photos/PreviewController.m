@@ -82,7 +82,7 @@
                                                  NSString *dataUTI,
                                                  UIImageOrientation orientation,
                                                  NSDictionary *info) {
-        enqueueInMainQueue(^{
+        executeInMain(^{
             settingBlock(imageData);
         });
     };
