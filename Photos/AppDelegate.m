@@ -27,12 +27,17 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:bounds];
     self.window.backgroundColor = [UIColor whiteColor];
     
-    [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+    void (^handler)(PHAuthorizationStatus status) = ^(PHAuthorizationStatus status) {
         if (status == PHAuthorizationStatusAuthorized)
             [self showController:[[AlbumsController alloc] init]];
         else {
             [self showController:[[NoAccessController alloc] init]];
         }
+    };
+    [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+        executeInMain(^{
+            handler(status);
+        });
     }];
     
     return YES;
