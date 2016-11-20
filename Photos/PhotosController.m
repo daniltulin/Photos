@@ -16,7 +16,7 @@
 #import "ThumbnailView.h"
 
 @interface PhotosController () <UICollectionViewDelegateFlowLayout, UIPageViewControllerDataSource,
-								UIPageViewControllerDelegate>
+								UIPageViewControllerDelegate, PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) ImageManager *manager;
 @property (nonatomic) AssetFetchResult *fetchResult;
@@ -51,6 +51,15 @@
     return controller;
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] unregisterChangeObserver:self];
+}
 
 static NSString * const reuseIdentifier = @"Cell";
 
@@ -201,6 +210,57 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [assets addObject:obj];
     }];
     return assets;
+}
+
+#pragma mark - <PHPhotoLibraryChangeObserver>
+
+- (void)photoLibraryDidChange:(PHChange *)changeInfo {
+    executeInMain(^{
+        PHObjectChangeDetails *albumChanges = [changeInfo
+                                               changeDetailsForObject:self.assetCollection];
+        if (albumChanges) {
+            self.assetCollection = [albumChanges objectAfterChanges];
+            self.title = self.assetCollection.localizedTitle;
+        }
+        
+        PHFetchResultChangeDetails *collectionChanges =
+                                          [changeInfo changeDetailsForFetchResult:self.fetchResult];
+        if (collectionChanges) {
+            self.fetchResult = collectionChanges.fetchResultAfterChanges;
+            if (collectionChanges.hasIncrementalChanges)
+                [self updateContentWithChangeDetails:collectionChanges];
+            else
+                [self.collectionView reloadData];
+        }
+    });
+}
+
+- (void)updateContentWithChangeDetails:(PHFetchResultChangeDetails *)collectionChanges {
+    [self.collectionView performBatchUpdates:^{
+        [self performBatchUpdateWithChangeDetails:collectionChanges];
+    } completion:nil];
+}
+
+- (void)performBatchUpdateWithChangeDetails:(PHFetchResultChangeDetails *)collectionChanges {
+    NSIndexSet *removed = collectionChanges.removedIndexes;
+    if (removed.count)
+        [self.collectionView deleteItemsAtIndexPaths:indexPathsFromIndexSet(removed)];
+    
+    NSIndexSet *inserted = collectionChanges.insertedIndexes;
+    if (inserted.count)
+        [self.collectionView insertItemsAtIndexPaths:indexPathsFromIndexSet(inserted)];
+    
+    NSIndexSet *changed = collectionChanges.changedIndexes;
+    if (changed.count)
+        [self.collectionView reloadItemsAtIndexPaths:indexPathsFromIndexSet(changed)];
+    
+    if (collectionChanges.hasMoves) {
+        [collectionChanges enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
+            NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
+            NSIndexPath *toIndexPath = [NSIndexPath indexPathForItem:toIndex inSection:0];
+            [self.collectionView moveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
+        }];
+    }
 }
 
 #pragma mark - ImageManager

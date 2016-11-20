@@ -15,7 +15,7 @@
 #import "AlbumCell.h"
 #import "PhotosController.h"
 
-@interface AlbumsController ()
+@interface AlbumsController () <PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *albumsFetchResult;
 @property (nonatomic) ImageManager *manager;
@@ -30,6 +30,16 @@
                forCellReuseIdentifier:ALBUM_CELL_ID];
     }
     return self;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[PHPhotoLibrary sharedPhotoLibrary] unregisterChangeObserver:self];
 }
 
 #pragma mark - Table View Delegate
@@ -125,6 +135,56 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     _manager = [ImageManager managerWithAssets:assets
                                   andImageSize:size];
     return _manager;
+}
+
+#pragma mark - <PHPhotoLibraryChangeObserver>
+
+- (void)photoLibraryDidChange:(PHChange *)changeInstance {
+    PHFetchResultChangeDetails *changeDetails =
+    							[changeInstance changeDetailsForFetchResult:self.albumsFetchResult];
+    executeInMain(^{
+        if (changeDetails != nil)
+            [self updateContentWithChangeDetails:changeDetails];
+        else
+            [self.tableView reloadData];
+    });
+}
+
+- (void)updateContentWithChangeDetails:(PHFetchResultChangeDetails *)changeDetails {
+    _albumsFetchResult = changeDetails.fetchResultAfterChanges;
+    if (changeDetails.hasIncrementalChanges)
+        [self updateContentWithIncrementalChanges:changeDetails];
+    else
+        [self.tableView reloadData];
+}
+
+- (void)updateContentWithIncrementalChanges:(PHFetchResultChangeDetails *)changeDetails {
+    [self.tableView beginUpdates];
+
+    NSIndexSet *removed = changeDetails.removedIndexes;
+    if (removed.count)
+        [self.tableView deleteRowsAtIndexPaths:indexPathsFromIndexSet(removed)
+                                        withRowAnimation:UITableViewRowAnimationFade];
+
+    NSIndexSet *inserted = changeDetails.insertedIndexes;
+    if (inserted.count)
+        [self.tableView insertRowsAtIndexPaths:indexPathsFromIndexSet(inserted)
+                                        withRowAnimation:UITableViewRowAnimationFade];
+
+    NSIndexSet *changed = changeDetails.changedIndexes;
+    if (changed.count)
+        [self.tableView reloadRowsAtIndexPaths:indexPathsFromIndexSet(changed)
+                                        withRowAnimation:UITableViewRowAnimationFade];
+
+    if (changeDetails.hasMoves)
+        [changeDetails enumerateMovesWithBlock:^(NSUInteger fromIndex, NSUInteger toIndex) {
+                NSIndexPath *fromIndexPath = [NSIndexPath indexPathForItem:fromIndex inSection:0];
+                NSIndexPath *toIndexPath = [NSIndexPath indexPathForItem:toIndex inSection:0];
+                [self.tableView moveRowAtIndexPath:fromIndexPath		
+                                                     toIndexPath:toIndexPath];		
+        }];
+    
+    [self.tableView endUpdates];		
 }
 
 #pragma mark - FetchingResult
