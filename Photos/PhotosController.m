@@ -84,8 +84,10 @@ static NSString * const reuseIdentifier = @"Cell";
     ImageResultHandler handler = ^void(UIImage *image) {
         cell.thumbnail = image;
     };
+    CGSize thumbnailPhysicalSize = [self thumbnailPhysicalSize];
     [self.manager fetchImageAtIndex:index
-                        withHandler:handler];
+                     withTargetSize:thumbnailPhysicalSize
+                         andHandler:handler];
     return cell;
 }
 
