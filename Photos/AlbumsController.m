@@ -15,7 +15,7 @@
 #import "AlbumCell.h"
 #import "PhotosController.h"
 
-@interface AlbumsController () <PHPhotoLibraryChangeObserver>
+@interface AlbumsController ()
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
 @property (nonatomic) ImageManager *manager;
@@ -40,12 +40,10 @@
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [[PHPhotoLibrary sharedPhotoLibrary] unregisterChangeObserver:self];
 }
 
 #pragma mark - Table View Delegate
