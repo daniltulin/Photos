@@ -122,10 +122,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = indexPath.row;
     PageController *controller = [[PageController alloc] init];
     controller.dataSource = self;
-    PHAsset *asset = self.fetchResult[index];
     
-    PreviewController *previewController = [PreviewController previewControllerWithAsset:asset
-                                                                                andIndex:index];
+    PreviewController *previewController = [self previewControllerWithIndex:index];
     [controller setViewController:previewController];
     [self.navigationController pushViewController:controller animated:YES];
 }
@@ -139,8 +137,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (index == 0)
         return nil;
     NSInteger newIndex = index - 1;
-    PHAsset *asset = self.fetchResult[newIndex];
-    return [PreviewController previewControllerWithAsset:asset andIndex:newIndex];
+    [self.manager cancelImageFetchingAtIndex:index];
+    return [self previewControllerWithIndex:newIndex];
 }
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController
@@ -150,8 +148,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (index == self.fetchResult.count - 1)
         return nil;
     NSInteger newIndex = index + 1;
-    PHAsset *asset = self.fetchResult[newIndex];
-    return [PreviewController previewControllerWithAsset:asset andIndex:newIndex];
+    [self.manager cancelImageFetchingAtIndex:index];
+    return [self previewControllerWithIndex:newIndex];
+}
+
+- (PreviewController *)previewControllerWithIndex:(NSInteger)index {
+    PreviewController *controller = [PreviewController previewControllerWithIndex:index];
+    ImageResultHandler handler = ^void(UIImage *image) {
+        controller.previewImage = image;
+    };
+    [self.manager fetchImageAtIndex:index
+                        withHandler:handler];
+    return controller;
 }
 
 #pragma mark - Fetch Result
@@ -165,7 +173,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                                        ascending:YES];
     options.sortDescriptors = @[dateSortDescriptor];
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    
     _fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
                                                  options:options];
     return _fetchResult;
@@ -188,7 +195,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         return _manager;
     NSArray *assets = [self albumAssets];
     _manager = [ImageManager managerWithAssets:assets
-                                  andImageSize:CGSizeZero];
+                                  andImageSize:CGSizeMake(2000, 2000)];
     return _manager;
 }
 
