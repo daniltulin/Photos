@@ -17,7 +17,7 @@
 
 @interface AlbumsController ()
 
-@property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
+@property (nonatomic) PHFetchResult<PHAssetCollection *> *albumsFetchResult;
 @property (nonatomic) ImageManager *manager;
 
 @property (nonatomic) NSArray *assets;
@@ -36,6 +36,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    executeInBackground(^{
+    	[self manager];
+    });
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -50,7 +53,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView
  numberOfRowsInSection:(NSInteger)section {
-    return self.fetchResult.count;
+    return self.albumsFetchResult.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView
@@ -59,7 +62,7 @@
                                                       forIndexPath:indexPath];
 
     NSInteger index = indexPath.row;
-    PHAssetCollection *collection = self.fetchResult[index];
+    PHAssetCollection *collection = self.albumsFetchResult[index];
 
     cell.textLabel.text = collection.localizedTitle;
     cell.detailTextLabel.text = nil;
@@ -67,7 +70,7 @@
     
     executeInBackground(^{
         NSInteger count = [self fetchAssetCount:collection];
-        executeInBackground(^{
+        executeInMain(^{
             cell.detailTextLabel.text = [[NSNumber numberWithInteger:count] stringValue];
         });
     });
@@ -94,7 +97,7 @@ heightForRowAtIndexPath:(NSIndexPath *)indexPath {
 
 - (void)tableView:(UITableView *)tableView
 didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    PHAssetCollection *assetCollection = self.fetchResult[indexPath.row];
+    PHAssetCollection *assetCollection = self.albumsFetchResult[indexPath.row];
     PhotosController *controller = [PhotosController
                                     photosControllerWithAssetCollection:assetCollection];
     controller.title = assetCollection.localizedTitle;
@@ -104,35 +107,26 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - Fetching
 
-- (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
-    PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
-                                                                  options:options];
-    return fetchResult.count;
+- (NSArray *)lastAlbumAssets {
+    NSMutableArray *assets = [NSMutableArray array];
+    for (PHAssetCollection *collection in self.albumsFetchResult) {
+        PHAsset *lastAsset = [self lastAssetForCollection:collection];
+        [assets addObject:lastAsset];
+    }
+    return assets;
 }
 
-- (void)fetchLastImage:(NSNumber *)identifier
-         resultHandler:(ResultHandler)resultHandler {
-    NSInteger index = [identifier integerValue];
-    PHAssetCollection *assetCollection = self.fetchResult[index];
+- (PHAsset *)lastAssetForCollection:(PHAssetCollection *)collection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
     options.fetchLimit = 1;
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
     NSSortDescriptor *dateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate"
                                                                        ascending:NO];
     options.sortDescriptors = @[dateSortDescriptor];
-    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
+    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:collection
                                                                   options:options];
     PHAsset *lastAsset = [fetchResult firstObject];
-    PHImageManager *manager = [PHImageManager defaultManager];
-
-    CGFloat imageWidth = 3 * THUMBNAIL_SIZE.width;
-    CGSize imageSize = CGSizeMake(imageWidth, imageWidth);
-
-    PHImageContentMode contentMode = PHImageContentModeAspectFit;
-    PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
-    requestOptions.networkAccessAllowed = YES;
+    return lastAsset;
 }
 
 #pragma mark - Image Manager
@@ -140,7 +134,7 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 - (ImageManager *)manager {
     if (_manager)
         return _manager;
-    NSArray *assets = nil;
+    NSArray *assets = [self lastAlbumAssets];
     CGSize size = CGSizeZero;
     _manager = [ImageManager managerWithAssets:assets
                                   andImageSize:size];
@@ -149,18 +143,26 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - FetchingResult
 
-- (PHFetchResult<PHAssetCollection *> *)fetchResult {
-    if (_fetchResult)
-        return _fetchResult;
+- (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
+    PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+    AssetFetchResult *fetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection
+                                                                  options:options];
+    return fetchResult.count;
+}
+
+- (PHFetchResult<PHAssetCollection *> *)albumsFetchResult {
+    if (_albumsFetchResult)
+        return _albumsFetchResult;
 
     PHAssetCollectionType type = PHAssetCollectionTypeAlbum;
     PHAssetCollectionSubtype subtype = PHAssetCollectionSubtypeAny;
 
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
-    _fetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
-                                                            subtype:subtype
-                                                            options:options];
-    return _fetchResult;
+    _albumsFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:type
+                                                                  subtype:subtype
+                                                                  options:options];
+    return _albumsFetchResult;
 }
 
 @end
