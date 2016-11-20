@@ -180,9 +180,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = previewController.index;
     if (index == 0)
         return nil;
-    
-    PHAsset *asset = self.fetchResult[index - 1];
-    return [PreviewController previewControllerWithAsset:asset andIndex:index - 1];
+    NSInteger newIndex = index - 1;
+    PHAsset *asset = self.fetchResult[newIndex];
+    return [PreviewController previewControllerWithAsset:asset andIndex:newIndex];
 }
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController
@@ -191,8 +191,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = previewController.index;
     if (index == self.fetchResult.count - 1)
         return nil;
-    PHAsset *asset = self.fetchResult[index + 1];
-    return [PreviewController previewControllerWithAsset:asset andIndex:index + 1];
+    NSInteger newIndex = index + 1;
+    PHAsset *asset = self.fetchResult[newIndex];
+    return [PreviewController previewControllerWithAsset:asset andIndex:newIndex];
 }
 
 #pragma mark - Fetch Result
