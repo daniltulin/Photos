@@ -8,24 +8,19 @@
 
 #import "PreviewController.h"
 
-@interface PreviewController () <UIGestureRecognizerDelegate>
+@interface PreviewController ()
 
-@property (nonatomic, readwrite) PHAsset *asset;
 @property (nonatomic) UIImageView *imageView;
-
 @property (nonatomic, readwrite) NSUInteger index;
 
 @property (nonatomic) UIActivityIndicatorView *indicatorView;
-@property (nonatomic) PHImageRequestID requestID;
 
 @end
 
 @implementation PreviewController
 
-+ (instancetype)previewControllerWithAsset:(PHAsset *)asset
-                                  andIndex:(NSUInteger)index {
++ (instancetype)previewControllerWithIndex:(NSUInteger)index {
     PreviewController *controller = [[PreviewController alloc] init];
-    controller.asset = asset;
     controller.index = index;
     return controller;
 }
@@ -40,8 +35,6 @@
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     
-    
-    
     self.imageView.frame = self.view.bounds;
     if (_indicatorView)
         self.indicatorView.center = CGPointMake(CGRectGetMidX(self.view.bounds),
@@ -50,46 +43,19 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    
-    if (self.imageView.image == nil) {
-        [self obtainImage];
+    if (self.previewImage == nil &&
+        self.indicatorView.superview == nil) {
+    	[self.view addSubview:self.indicatorView];
+    	[self.indicatorView startAnimating];
     }
 }
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    if (self.requestID)
-        [[PHImageManager defaultManager] cancelImageRequest:self.requestID];
-}
-
-- (void)obtainImage {
-    [self.view addSubview:self.indicatorView];
-    [self.indicatorView startAnimating];
-    
-    PHImageRequestOptions *options = [[PHImageRequestOptions alloc] init];
-    options.networkAccessAllowed = YES;
-    
-    typedef void (^ImageSettingBlock)(NSData *imageData);
-    ImageSettingBlock settingBlock = ^void(NSData *imageData) {
-        [self.indicatorView stopAnimating];
-        [self.indicatorView removeFromSuperview];
-        _indicatorView = nil;
-        
-        self.imageView.image = [UIImage imageWithData:imageData];
-    };
-    
-    ResultImageDataHandler resultHandler = ^void(NSData *imageData,
-                                                 NSString *dataUTI,
-                                                 UIImageOrientation orientation,
-                                                 NSDictionary *info) {
-        executeInMain(^{
-            settingBlock(imageData);
-        });
-    };
-    
-    self.requestID = [[PHImageManager defaultManager] requestImageDataForAsset:self.asset
-                                                                       options:options
-                                                                 resultHandler:resultHandler];
+- (void)setPreviewImage:(UIImage *)previewImage {
+    _previewImage = previewImage;
+    [self.indicatorView stopAnimating];
+    [self.indicatorView removeFromSuperview];
+    _indicatorView = nil;
+    self.imageView.image = previewImage;
 }
 
 #pragma mark - Image View

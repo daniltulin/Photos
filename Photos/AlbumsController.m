@@ -20,8 +20,6 @@
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *albumsFetchResult;
 @property (nonatomic) ImageManager *manager;
 
-@property (nonatomic) NSArray *assets;
-
 @end
 
 @implementation AlbumsController
@@ -135,7 +133,10 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_manager)
         return _manager;
     NSArray *assets = [self lastAlbumAssets];
-    CGSize size = CGSizeZero;
+
+    float width = 3 * THUMBNAIL_SIZE.width;
+
+    CGSize size = CGSizeMake(width, width);
     _manager = [ImageManager managerWithAssets:assets
                                   andImageSize:size];
     return _manager;

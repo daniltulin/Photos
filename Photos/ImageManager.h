@@ -15,8 +15,17 @@ typedef void (^ImageResultHandler)(UIImage *image);
 + (instancetype)managerWithAssets:(NSArray *)assets
                      andImageSize:(CGSize)imageSize;
 
+- (void)startCaching;
+- (void)stopCaching;
+
 - (void)fetchImageAtIndex:(NSInteger)index
               withHandler:(ImageResultHandler)handler;
+
+// In case if you need smaller size image than you specified
+// in constructor
+- (void)fetchImageAtIndex:(NSInteger)index
+           withTargetSize:(CGSize)targetSize
+               andHandler:(ImageResultHandler)handler;
 
 - (void)cancelImageFetchingAtIndex:(NSInteger)index;
 

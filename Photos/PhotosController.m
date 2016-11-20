@@ -8,6 +8,8 @@
 
 #import "PhotosController.h"
 
+#import "ImageManager.h"
+
 #import "PageController.h"
 #import "PreviewController.h"
 
@@ -16,15 +18,12 @@
 @interface PhotosController () <UICollectionViewDelegateFlowLayout, UIPageViewControllerDataSource,
 								UIPageViewControllerDelegate>
 
-@property (nonatomic) PHAssetCollection *assetCollection;
+@property (nonatomic) ImageManager *manager;
 @property (nonatomic) AssetFetchResult *fetchResult;
 
+@property (nonatomic) PHAssetCollection *assetCollection;
+
 @property (nonatomic) UIPageViewController *pageViewController;
-
-@property (nonatomic) PHCachingImageManager *imageManager;
-@property (nonatomic) PHImageRequestOptions *requestOptions;
-
-@property (nonatomic) NSMutableDictionary *requests;
 
 @end
 
@@ -40,7 +39,6 @@
     UICollectionViewFlowLayout *viewLayout = [[UICollectionViewFlowLayout alloc] init];
     viewLayout.minimumLineSpacing = .0f;
     viewLayout.minimumInteritemSpacing = .0f;
-    
     if (self = [super initWithCollectionViewLayout:viewLayout]) {
         self.assetCollection = assetCollection;
     }
@@ -61,25 +59,9 @@ static NSString * const reuseIdentifier = @"Cell";
     self.collectionView.backgroundColor = [UIColor whiteColor];
     [self.collectionView registerClass:[ThumbnailView class]
             forCellWithReuseIdentifier:reuseIdentifier];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
     executeInBackground(^{
-        NSMutableArray *assets = [[NSMutableArray alloc] init];
-        [self.fetchResult enumerateObjectsUsingBlock:^(PHAsset *obj, NSUInteger idx, BOOL *stop) {
-            [assets addObject:obj];
-        }];
-        [self.imageManager startCachingImagesForAssets:assets
-                                            targetSize:[self thumbnailPhysicalSize]
-                                           contentMode:PHImageContentModeDefault
-                                               options:self.requestOptions];
+        [self manager];
     });
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [self.imageManager stopCachingImagesForAllAssets];
 }
 
 #pragma mark -  <UICollectionViewDelegate>
@@ -97,34 +79,15 @@ static NSString * const reuseIdentifier = @"Cell";
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     ThumbnailView *cell = [collectionView dequeueReusableCellWithReuseIdentifier:reuseIdentifier
                                                                     forIndexPath:indexPath];
-    PHAsset *asset = self.fetchResult[indexPath.row];
     
     NSInteger index = indexPath.row;
-    NSNumber *identifier = [NSNumber numberWithInteger:index];
-    
-    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        executeInMain(^{
-            NSNumber *request = self.requests[identifier];
-            if (request == nil)
-                return;
-            if (info[PHImageErrorKey] != nil) {
-                NSLog(@"%@", info[PHImageErrorKey]);
-                return;
-            }
-            if (info[PHImageCancelledKey] == NO) {
-                cell.thumbnail = result;
-                if (info[PHImageResultIsDegradedKey]) return;
-            }
-            [self.requests removeObjectForKey:identifier];
-        });
+    ImageResultHandler handler = ^void(UIImage *image) {
+        cell.thumbnail = image;
     };
     CGSize thumbnailPhysicalSize = [self thumbnailPhysicalSize];
-    PHImageRequestID requestID = [self.imageManager requestImageForAsset:asset
-                                                              targetSize:thumbnailPhysicalSize
-                                                             contentMode:PHImageContentModeDefault
-                                                                 options:self.requestOptions
-                                                           resultHandler:resultHandler];
-    self.requests[identifier] = [NSNumber numberWithInteger:requestID];
+    [self.manager fetchImageAtIndex:index
+                     withTargetSize:thumbnailPhysicalSize
+                         andHandler:handler];
     return cell;
 }
 
@@ -132,12 +95,7 @@ static NSString * const reuseIdentifier = @"Cell";
   didEndDisplayingCell:(UICollectionViewCell *)cell
     forItemAtIndexPath:(NSIndexPath *)indexPath {
     NSInteger index = indexPath.row;
-    NSNumber *identifier = [NSNumber numberWithInteger:index];
-    NSNumber *request = self.requests[identifier];
-    if (request != nil) {
-        [self.imageManager cancelImageRequest:[request intValue]];
-        [self.requests removeObjectForKey:request];
-    }
+    [self.manager cancelImageFetchingAtIndex:index];
 }
 
 #pragma mark - UICollectionViewDelegateFlowLayout
@@ -164,10 +122,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = indexPath.row;
     PageController *controller = [[PageController alloc] init];
     controller.dataSource = self;
-    PHAsset *asset = self.fetchResult[index];
     
-    PreviewController *previewController = [PreviewController previewControllerWithAsset:asset
-                                                                                andIndex:index];
+    PreviewController *previewController = [self previewControllerWithIndex:index];
     [controller setViewController:previewController];
     [self.navigationController pushViewController:controller animated:YES];
 }
@@ -180,9 +136,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = previewController.index;
     if (index == 0)
         return nil;
-    
-    PHAsset *asset = self.fetchResult[index - 1];
-    return [PreviewController previewControllerWithAsset:asset andIndex:index - 1];
+    NSInteger newIndex = index - 1;
+    [self.manager cancelImageFetchingAtIndex:index];
+    return [self previewControllerWithIndex:newIndex];
 }
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController
@@ -191,8 +147,19 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSUInteger index = previewController.index;
     if (index == self.fetchResult.count - 1)
         return nil;
-    PHAsset *asset = self.fetchResult[index + 1];
-    return [PreviewController previewControllerWithAsset:asset andIndex:index + 1];
+    NSInteger newIndex = index + 1;
+    [self.manager cancelImageFetchingAtIndex:index];
+    return [self previewControllerWithIndex:newIndex];
+}
+
+- (PreviewController *)previewControllerWithIndex:(NSInteger)index {
+    PreviewController *controller = [PreviewController previewControllerWithIndex:index];
+    ImageResultHandler handler = ^void(UIImage *image) {
+        controller.previewImage = image;
+    };
+    [self.manager fetchImageAtIndex:index
+                        withHandler:handler];
+    return controller;
 }
 
 #pragma mark - Fetch Result
@@ -206,38 +173,30 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                                        ascending:YES];
     options.sortDescriptors = @[dateSortDescriptor];
     options.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-    
     _fetchResult = [PHAsset fetchAssetsInAssetCollection:self.assetCollection
                                                  options:options];
     return _fetchResult;
 }
 
+- (NSArray *)albumAssets {
+    NSMutableArray *assets = [NSMutableArray array];
+    [self.fetchResult enumerateObjectsUsingBlock:^(PHAsset *obj,
+                                                   NSUInteger idx,
+                                                   BOOL *stop) {
+        [assets addObject:obj];
+    }];
+    return assets;
+}
+
 #pragma mark - ImageManager
 
-- (PHCachingImageManager *)imageManager {
-    if (_imageManager)
-        return _imageManager;
-    _imageManager = [[PHCachingImageManager alloc] init];
-    return _imageManager;
-}
-
-#pragma mark - RequestOptions
-
-- (PHImageRequestOptions *)requestOptions {
-    if (_requestOptions)
-        return _requestOptions;
-    _requestOptions = [[PHImageRequestOptions alloc] init];
-    _requestOptions.networkAccessAllowed = YES;
-    return _requestOptions;
-}
-
-#pragma mark - Requests
-
-- (NSMutableDictionary *)requests {
-    if (_requests)
-        return _requests;
-    _requests = [[NSMutableDictionary alloc] init];
-    return _requests;
+- (ImageManager *)manager {
+    if (_manager)
+        return _manager;
+    NSArray *assets = [self albumAssets];
+    _manager = [ImageManager managerWithAssets:assets
+                                  andImageSize:CGSizeMake(2000, 2000)];
+    return _manager;
 }
 
 @end
