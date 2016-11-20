@@ -10,13 +10,17 @@
 
 #import <Photos/Photos.h>
 
+#import "ImageManager.h"
+
 #import "AlbumCell.h"
 #import "PhotosController.h"
 
 @interface AlbumsController () <PHPhotoLibraryChangeObserver>
 
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *fetchResult;
-@property (nonatomic) NSMutableDictionary *requests;
+@property (nonatomic) ImageManager *manager;
+
+@property (nonatomic) NSArray *assets;
 
 @end
 
@@ -32,9 +36,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
 }
-
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
@@ -64,24 +66,27 @@
     cell.textLabel.text = collection.localizedTitle;
     cell.detailTextLabel.text = nil;
     cell.thumbnail = nil;
-
-    NSNumber *identifier = [NSNumber numberWithUnsignedInteger:index];
+    
     executeInBackground(^{
-        [self obtainCellInformation:cell
-                         identifier:identifier];
+        NSInteger count = [self fetchAssetCount:collection];
+        executeInBackground(^{
+            cell.detailTextLabel.text = [[NSNumber numberWithInteger:count] stringValue];
+        });
     });
+    
+    ImageResultHandler handler = ^void(UIImage *image) {
+        cell.thumbnail = image;
+    };
+    [self.manager fetchImageAtIndex:index
+                        withHandler:handler];
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView
 didEndDisplayingCell:(AlbumCell *)cell
 forRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSNumber *identifier = [NSNumber numberWithUnsignedInteger:indexPath.row];
-    NSNumber *requestID = self.requests[identifier];
-    if (requestID != nil) {
-        PHImageManager *manager = [PHImageManager defaultManager];
-        [manager cancelImageRequest:[requestID intValue]];
-    }
+    NSInteger index = indexPath.row;
+    [self.manager cancelImageFetchingAtIndex:index];
 }
 
 - (CGFloat)tableView:(UITableView *)tableView
@@ -100,28 +105,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 #pragma mark - Fetching
-
-- (void)obtainCellInformation:(AlbumCell *)cell
-                   identifier:(NSNumber *)identifier {
-    NSInteger index = [identifier integerValue];
-
-    PHAssetCollection *assetCollection = self.fetchResult[index];
-    NSInteger count = [self fetchAssetCount:assetCollection];
-
-    enqueueInMainQueue(^{
-        cell.detailTextLabel.text = [[NSNumber numberWithLong:count] stringValue];
-    });
-    ResultHandler resultHandler = ^void(UIImage *result, NSDictionary *info) {
-        enqueueInMainQueue(^{
-            if (self.requests[identifier] == nil || info[PHImageCancelledKey])
-                return;
-            [self.requests removeObjectForKey:identifier];
-            cell.thumbnail = result;
-        });
-    };
-    [self fetchLastImage:identifier
-           resultHandler:resultHandler];
-}
 
 - (NSUInteger)fetchAssetCount:(PHAssetCollection *)assetCollection {
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
@@ -152,15 +135,18 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     PHImageContentMode contentMode = PHImageContentModeAspectFit;
     PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
     requestOptions.networkAccessAllowed = YES;
-    
-    PHImageRequestID requestID =  [manager requestImageForAsset:lastAsset
-                                                     targetSize:imageSize
-                                                    contentMode:contentMode
-                                                        options:requestOptions
-                                                  resultHandler:resultHandler];
-    enqueueInMainQueue(^{
-        self.requests[identifier] = [NSNumber numberWithInt:requestID];
-    });
+}
+
+#pragma mark - Image Manager
+
+- (ImageManager *)manager {
+    if (_manager)
+        return _manager;
+    NSArray *assets = nil;
+    CGSize size = CGSizeZero;
+    _manager = [ImageManager managerWithAssets:assets
+                                  andImageSize:size];
+    return _manager;
 }
 
 #pragma mark - FetchingResult
@@ -177,15 +163,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
                                                             subtype:subtype
                                                             options:options];
     return _fetchResult;
-}
-
-#pragma mark - requests
-
-- (NSMutableDictionary *)requests {
-    if (_requests)
-        return _requests;
-    _requests = [[NSMutableDictionary alloc] init];
-    return _requests;
 }
 
 #pragma mark - <PHPhotoLibraryChangeObserver>
