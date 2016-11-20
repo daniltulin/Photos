@@ -30,6 +30,12 @@
     
 }
 
+- (void)fetchImageAtIndex:(NSInteger)index
+           withTargetSize:(CGSize)targetSize
+               andHandler:(ImageResultHandler)handler {
+    
+}
+
 - (void)cancelImageFetchingAtIndex:(NSInteger)index {
     
 }

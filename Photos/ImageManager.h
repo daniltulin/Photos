@@ -18,6 +18,12 @@ typedef void (^ImageResultHandler)(UIImage *image);
 - (void)fetchImageAtIndex:(NSInteger)index
               withHandler:(ImageResultHandler)handler;
 
+// In case if you need smaller size image than you specified
+// in constructor
+- (void)fetchImageAtIndex:(NSInteger)index
+           withTargetSize:(CGSize)targetSize
+               andHandler:(ImageResultHandler)handler;
+
 - (void)cancelImageFetchingAtIndex:(NSInteger)index;
 
 @end
