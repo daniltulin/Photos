@@ -12,8 +12,8 @@ typedef void (^ImageResultHandler)(UIImage *image);
 
 @interface ImageManager : NSObject
 
-+ (instancetype)managerWithAssets:(NSArray *)assets
-                     andImageSize:(CGSize)imageSize;
++ (instancetype)managerWithFetchResult:(AssetFetchResult *)fetchResult
+                          andImageSize:(CGSize)imageSize;
 
 - (void)fetchImageAtIndex:(NSInteger)index
               withHandler:(ImageResultHandler)handler;
