@@ -35,4 +35,8 @@ __attribute__((unused)) static void executeInBackground(dispatch_block_t block) 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), block);
 }
 
+__attribute__((unused)) static bool isMain() {
+    return dispatch_get_main_queue() == dispatch_get_current_queue();
+}
+
 #endif /* PrefixHeader_pch */
