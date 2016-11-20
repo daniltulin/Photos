@@ -1,3 +1,5 @@
 language: objective-c
+osx_image: xcode8.2
 xcode_project: Photos.xcodeproj
 xcode_scheme: Photos, OCLint
+xcode_sdk: iphonesimulator9.0
