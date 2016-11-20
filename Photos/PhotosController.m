@@ -19,8 +19,9 @@
 								UIPageViewControllerDelegate>
 
 @property (nonatomic) ImageManager *manager;
-@property (nonatomic) PHAssetCollection *assetCollection;
 @property (nonatomic) AssetFetchResult *fetchResult;
+
+@property (nonatomic) PHAssetCollection *assetCollection;
 
 @property (nonatomic) UIPageViewController *pageViewController;
 
