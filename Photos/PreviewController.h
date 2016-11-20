@@ -7,12 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <Photos/Photos.h>
 
 @interface PreviewController : UIViewController
 
 @property (nonatomic, readonly) NSUInteger index;
-+ (instancetype)previewControllerWithAsset:(PHAsset *)asset
-                                  andIndex:(NSUInteger)index;
++ (instancetype)previewControllerWithIndex:(NSUInteger)index;
+
+@property (nonatomic) UIImage *previewImage;
 
 @end

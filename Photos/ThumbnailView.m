@@ -23,6 +23,7 @@
 }
 
 - (void)setThumbnail:(UIImage *)thumbnailImage {
+    _thumbnail = thumbnailImage;
     self.thumbnailImageView.image = thumbnailImage;
 }
 
@@ -34,6 +35,7 @@
     _thumbnailImageView = [[UIImageView alloc] init];
     _thumbnailImageView.contentMode = UIViewContentModeScaleAspectFill;
     _thumbnailImageView.clipsToBounds = YES;
+    _thumbnailImageView.backgroundColor = [UIColor lightGrayColor];
     return _thumbnailImageView;
 }
 
