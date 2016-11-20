@@ -20,8 +20,6 @@
 @property (nonatomic) PHFetchResult<PHAssetCollection *> *albumsFetchResult;
 @property (nonatomic) ImageManager *manager;
 
-@property (nonatomic) NSArray *assets;
-
 @end
 
 @implementation AlbumsController
