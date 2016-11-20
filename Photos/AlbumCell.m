@@ -40,6 +40,12 @@
     CGRect bounds = self.contentView.bounds;
     self.albumPreview.center = CGPointMake(CGRectGetWidth(bounds) - centerOffset,
                                            CGRectGetMidY(bounds));
+    
+    CGRect labelFrame = self.textLabel.frame;
+    labelFrame.size.width = CGRectGetMinX(self.albumPreview.frame) -
+    						CGRectGetMinX(labelFrame) - OFFSET;
+    self.textLabel.frame = labelFrame;
+    self.textLabel.adjustsFontSizeToFitWidth = YES;
 }
 
 - (void)setThumbnail:(UIImage *)thumbnail {
