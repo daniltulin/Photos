@@ -10,17 +10,17 @@
 
 @interface ImageManager ()
 
-@property (nonatomic) AssetFetchResult *fetchResult;
+@property (nonatomic) NSArray *assets;
 @property (nonatomic) CGSize imageSize;
 
 @end
 
 @implementation ImageManager
 
-+ (instancetype)managerWithFetchResult:(AssetFetchResult *)fetchResult
-                          andImageSize:(CGSize)imageSize {
++ (instancetype)managerWithAssets:(NSArray *)assets
+                     andImageSize:(CGSize)imageSize {
     ImageManager *manager = [[ImageManager alloc] init];
-    manager.fetchResult = fetchResult;
+    manager.assets = assets;
     manager.imageSize = imageSize;
     return manager;
 }
