@@ -32,21 +32,6 @@
     return self;
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    executeInBackground(^{
-    	[self manager];
-    });
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-}
-
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-}
-
 #pragma mark - Table View Delegate
 
 - (NSInteger)tableView:(UITableView *)tableView
