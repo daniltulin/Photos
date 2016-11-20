@@ -25,6 +25,14 @@
     return manager;
 }
 
+- (void)startCaching {
+    
+}
+
+- (void)stopCaching {
+    
+}
+
 - (void)fetchImageAtIndex:(NSInteger)index
               withHandler:(ImageResultHandler)handler {
     

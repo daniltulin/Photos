@@ -15,6 +15,9 @@ typedef void (^ImageResultHandler)(UIImage *image);
 + (instancetype)managerWithAssets:(NSArray *)assets
                      andImageSize:(CGSize)imageSize;
 
+- (void)startCaching;
+- (void)stopCaching;
+
 - (void)fetchImageAtIndex:(NSInteger)index
               withHandler:(ImageResultHandler)handler;
 
