@@ -59,9 +59,6 @@ static NSString * const reuseIdentifier = @"Cell";
     self.collectionView.backgroundColor = [UIColor whiteColor];
     [self.collectionView registerClass:[ThumbnailView class]
             forCellWithReuseIdentifier:reuseIdentifier];
-    executeInBackground(^{
-        [self manager];
-    });
 }
 
 #pragma mark -  <UICollectionViewDelegate>
@@ -81,13 +78,12 @@ static NSString * const reuseIdentifier = @"Cell";
                                                                     forIndexPath:indexPath];
     
     NSInteger index = indexPath.row;
+    cell.thumbnail = nil;
     ImageResultHandler handler = ^void(UIImage *image) {
         cell.thumbnail = image;
     };
-    CGSize thumbnailPhysicalSize = [self thumbnailPhysicalSize];
     [self.manager fetchImageAtIndex:index
-                     withTargetSize:thumbnailPhysicalSize
-                         andHandler:handler];
+                     withHandler:handler];
     return cell;
 }
 
@@ -148,7 +144,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if (index == self.fetchResult.count - 1)
         return nil;
     NSInteger newIndex = index + 1;
-    [self.manager cancelImageFetchingAtIndex:index];
     return [self previewControllerWithIndex:newIndex];
 }
 
@@ -158,8 +153,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         controller.previewImage = image;
     };
     [self.manager fetchImageAtIndex:index
-                        withHandler:handler];
+                     withTargetSize:CGSizeMake(2000, 2000)
+                         andHandler:handler];
     return controller;
+}
+
+- (void)pageViewController:(UIPageViewController *)pageViewController
+        didFinishAnimating:(BOOL)finished
+   previousViewControllers:(NSArray *)controllers
+       transitionCompleted:(BOOL)completed {
+    PreviewController *controller = [controllers firstObject];
+    NSInteger index = controller.index;
+    [self.manager cancelImageFetchingAtIndex:index];
 }
 
 #pragma mark - Fetch Result
@@ -195,7 +200,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         return _manager;
     NSArray *assets = [self albumAssets];
     _manager = [ImageManager managerWithAssets:assets
-                                  andImageSize:CGSizeMake(2000, 2000)];
+                                  andImageSize:[self thumbnailPhysicalSize]];
     return _manager;
 }
 
