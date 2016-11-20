@@ -8,6 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void (^ImageResultHandler)(UIImage *image);
+
 @interface ImageManager : NSObject
+
++ (instancetype)managerWithAssets:(NSArray *)assets
+                     andImageSize:(CGSize)imageSize;
+
+- (void)fetchImageAtIndex:(NSInteger)index
+              withHandler:(ImageResultHandler)handler;
+
+- (void)cancelImageFetchingAtIndex:(NSInteger)index;
 
 @end
