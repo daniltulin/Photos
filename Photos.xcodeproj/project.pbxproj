@@ -6,6 +6,20 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		A15A4DF91DE1A0770027114D /* OCLint */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = A15A4DFC1DE1A0770027114D /* Build configuration list for PBXAggregateTarget "OCLint" */;
+			buildPhases = (
+				A15A4DFE1DE1A07F0027114D /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = OCLint;
+			productName = OCLint;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		A118331F1DDC970800A7BE21 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A118331E1DDC970800A7BE21 /* main.m */; };
 		A11833221DDC970800A7BE21 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A11833211DDC970800A7BE21 /* AppDelegate.m */; };
@@ -231,6 +245,10 @@
 						DevelopmentTeam = 34F67V55EC;
 						ProvisioningStyle = Automatic;
 					};
+					A15A4DF91DE1A0770027114D = {
+						CreatedOnToolsVersion = 8.1;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = A11833151DDC970800A7BE21 /* Build configuration list for PBXProject "Photos" */;
@@ -247,6 +265,7 @@
 			projectRoot = "";
 			targets = (
 				A11833191DDC970800A7BE21 /* Photos */,
+				A15A4DF91DE1A0770027114D /* OCLint */,
 			);
 		};
 /* End PBXProject section */
@@ -261,6 +280,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A15A4DFE1DE1A07F0027114D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "./$(SRCROOT)/scripts/check_syntax.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A11833161DDC970800A7BE21 /* Sources */ = {
@@ -402,6 +437,20 @@
 			};
 			name = Release;
 		};
+		A15A4DFA1DE1A0770027114D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		A15A4DFB1DE1A0770027114D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -422,6 +471,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		A15A4DFC1DE1A0770027114D /* Build configuration list for PBXAggregateTarget "OCLint" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A15A4DFA1DE1A0770027114D /* Debug */,
+				A15A4DFB1DE1A0770027114D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
