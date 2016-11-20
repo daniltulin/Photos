@@ -152,8 +152,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     ImageResultHandler handler = ^void(UIImage *image) {
         controller.previewImage = image;
     };
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    CGFloat screenWidth = screenRect.size.width;
+    CGFloat screenHeight = screenRect.size.height;
+    
+    float multiplier = 1;
+    if (fabs(414 - screenWidth) < 0.005) multiplier = 3;
+    else multiplier = 2;
+    CGSize targetSize = CGSizeMake(multiplier * screenWidth,
+                                   multiplier * screenHeight);
+    
     [self.manager fetchImageAtIndex:index
-                     withTargetSize:CGSizeMake(2000, 2000)
+                     withTargetSize:targetSize
                          andHandler:handler];
     return controller;
 }
