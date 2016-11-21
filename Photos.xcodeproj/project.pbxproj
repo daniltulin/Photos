@@ -247,6 +247,7 @@
 				TargetAttributes = {
 					A11833191DDC970800A7BE21 = {
 						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = 34F67V55EC;
 						ProvisioningStyle = Automatic;
 					};
 					A15A4DF91DE1A0770027114D = {
@@ -414,7 +415,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 34F67V55EC;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Photos/PrefixHeader.pch;
 				INFOPLIST_FILE = Photos/Info.plist;
@@ -430,7 +431,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 34F67V55EC;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Photos/PrefixHeader.pch;
 				INFOPLIST_FILE = Photos/Info.plist;
