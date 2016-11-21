@@ -22,7 +22,7 @@ if [ ! -f compile_commands.json ]; then
   xcodebuild clean
 
   #build xcodebuild.log
-  xcodebuild ONLY_ACTIVE_ARCH=NO -workspace ${PROJECT_NAME}.xcworkspace -scheme ${PROJECT_NAME} -configuration Debug clean build| tee ${TARGET_TEMP_DIR}/xcodebuild.log | xcpretty
+  xcodebuild ONLY_ACTIVE_ARCH=NO -project ${PROJECT_NAME}.xcodeproj -scheme ${PROJECT_NAME} -configuration Debug clean build| tee ${TARGET_TEMP_DIR}/xcodebuild.log | xcpretty
   #xcodebuild <options>| tee ${TARGET_TEMP_DIR}/xcodebuild.log
 
   echo "[*] transforming xcodebuild.log into compile_commands.json..."
