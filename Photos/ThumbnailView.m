@@ -27,6 +27,11 @@
     self.thumbnailImageView.image = thumbnailImage;
 }
 
+- (void)prepareForReuse {
+    [super prepareForReuse];
+    self.thumbnailImageView = nil;
+}
+
 #pragma mark - ThumbnailImageView
 
 - (UIImageView *)thumbnailImageView {

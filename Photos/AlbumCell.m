@@ -53,6 +53,13 @@
     self.albumPreview.image = thumbnail;
 }
 
+- (void)prepareForReuse {
+    [super prepareForReuse];
+    self.textLabel.text = nil;
+    self.detailTextLabel.text = nil;
+    self.thumbnail = nil;
+}
+
 #pragma mark - Album Preview
 
 - (UIImageView *)albumPreview {
