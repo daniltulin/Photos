@@ -58,8 +58,6 @@
     PHAssetCollection *collection = self.albumsFetchResult[index];
 
     cell.textLabel.text = collection.localizedTitle;
-    cell.detailTextLabel.text = nil;
-    cell.thumbnail = nil;
     
     executeInBackground(^{
         NSInteger count = [self fetchAssetCount:collection];

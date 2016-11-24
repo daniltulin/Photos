@@ -87,7 +87,6 @@ static NSString * const reuseIdentifier = @"Cell";
                                                                     forIndexPath:indexPath];
     
     NSInteger index = indexPath.row;
-    cell.thumbnail = nil;
     ImageResultHandler handler = ^void(UIImage *image) {
         cell.thumbnail = image;
     };
